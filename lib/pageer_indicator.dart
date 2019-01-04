@@ -8,24 +8,31 @@ class PageBubble extends StatelessWidget {
   PageBubble({this.viewModel});
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(10.0),
-      child: Container(
-        width: lerpDouble(20.0, 45.0, viewModel.activePercent),
-        height: lerpDouble(20.0, 45.0, viewModel.activePercent),
-        decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: viewModel.isHollow ? Colors.transparent : Color(0X88FFFFFF),
-            border: Border.all(
-                width: 3.0,
+    return Container(
+        width: 55.0,
+        height: 65.0,
+        child: Center(
+          child: Container(
+            width: lerpDouble(20.0, 45.0, viewModel.activePercent),
+            height: lerpDouble(20.0, 45.0, viewModel.activePercent),
+            decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 color: viewModel.isHollow
                     ? Color(0X88FFFFFF)
-                    : Colors.transparent)),
-        child: Opacity(
-            opacity: viewModel.activePercent,
-            child: Image.asset(viewModel.iconAssetPath, color: Colors.blue)),
-      ),
-    );
+                        .withAlpha((0x88 * viewModel.activePercent).round())
+                    : Color(0X88FFFFFF),
+                border: Border.all(
+                    width: 3.0,
+                    color: viewModel.isHollow
+                        ? Color(0X88FFFFFF).withAlpha(
+                            (0x88 * (1.0 - viewModel.activePercent)).round())
+                        : Colors.transparent)),
+            child: Opacity(
+                opacity: viewModel.activePercent,
+                child:
+                    Image.asset(viewModel.iconAssetPath, color: Colors.blue)),
+          ),
+        ));
   }
 }
 
@@ -59,22 +66,49 @@ class PageIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<PageBubble> bubbles = [];
+
     for (var i = 0; i < viewModal.pages.length; ++i) {
+      var percentActive;
+      bool ishallow = i > viewModal.activeIndex ||
+          i == viewModal.activeIndex &&
+              viewModal.slideDirection == SlideDirection.leftToRight;
+      if (i == viewModal.activeIndex) {
+        percentActive = 1.0 - viewModal.slidePercent;
+      } else if (i == viewModal.activeIndex - 1 &&
+          viewModal.slideDirection == SlideDirection.leftToRight) {
+        percentActive = viewModal.slidePercent;
+      } else if (i == viewModal.activeIndex + 1 &&
+          viewModal.slideDirection == SlideDirection.rightToLeft) {
+        percentActive = viewModal.slidePercent;
+      } else {
+        percentActive = 0.0;
+      }
       final page = viewModal.pages[i];
       bubbles.add(PageBubble(
-        viewModel: PagerBubbleViewModel(page.iconAssetIcon, page.color,
-            i == viewModal.activeIndex ? 1.0 : 0, i > viewModal.activeIndex),
+        viewModel: PagerBubbleViewModel(
+            page.iconAssetIcon, page.color, percentActive, ishallow),
       ));
     }
+    var BUBBLE_WIDTH = 55.0;
+    var basetranslate =
+        (viewModal.pages.length * BUBBLE_WIDTH) / 2 - BUBBLE_WIDTH / 2;
+    var offset = BUBBLE_WIDTH * viewModal.slidePercent;
+    if (viewModal.slideDirection == SlideDirection.rightToLeft) {
+      offset = -offset;
+    }
+    var translate =
+        basetranslate - (viewModal.activeIndex * BUBBLE_WIDTH) + offset;
     return Column(
       children: <Widget>[
         Expanded(
           child: Container(),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: bubbles,
-        )
+        Transform(
+            transform: Matrix4.translationValues(translate, 0, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: bubbles,
+            ))
       ],
     );
   }

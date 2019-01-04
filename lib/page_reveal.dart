@@ -26,8 +26,10 @@ class CircleRevealClipper extends CustomClipper<Rect>{
   @override
   Rect getClip(Size size) {
     final epiCenter = Offset(size.width / 2 , size.height*0.9);    //where the circle begin
-    print("epi center is ");
-    print(epiCenter);
+ // print("epi center is ");
+   //   print(revealPercent);
+
+   // print(epiCenter);
   
     /*
         |*
